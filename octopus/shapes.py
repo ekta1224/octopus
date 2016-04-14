@@ -6,7 +6,6 @@ To-Do:
 
 1. Rotation
 2. Weight function
-3. Implement volumes
 """
 
 def shells(x, y, z, width, r, q, s):
@@ -50,7 +49,24 @@ def axis_ratios(shape_T):
     q = np.sqrt(b/a)
     return evec, s, q
 
-def iterate(x, y, z, r, dr, tol):
+def iterate_shell(x, y, z, r, dr, tol):
+    """
+    Computes the halo axis rates (q,s)
+    Where q=c/a and s=b/a
+    Where a>b>c are the principal length of the axis.
+
+    Parameters:
+    -----------
+    x, y, z: arrays with the positions of the particles
+    r: distance at which you want the shape
+    dr: Width of the shell
+    tol: convergence factor
+
+    Returns:
+    s: c/a
+    q: b/a
+
+    """
     s_i = 1.0 #first guess of shape
     q_i = 1.0
     x_s, y_s, z_s = shells(x, y, z, dr, r, q_i, s_i)
@@ -59,6 +75,35 @@ def iterate(x, y, z, r, dr, tol):
     while ((abs(s-s_i)>tol) & (abs(q-q_i)>tol)):
         s_i, q_i = s, q
         x_s, y_s, z_s = shells(x, y, z, dr, r, q_i, s_i)
+        s_tensor = shape_tensor(x_s, y_s, z_s)
+        rot, s, q = axis_ratios(s_tensor)
+    return s, q
+
+def iterate_volume(x, y, z, r, tol):
+    """
+    Computes the halo axis rates (q,s)
+    Where q=c/a and s=b/a
+    Where a>b>c are the principal length of the axis.
+
+    Parameters:
+    -----------
+    x, y, z: arrays with the positions of the particles
+    r: distance at which you want the shape
+    tol: convergence factor
+
+    Returns:
+    s: c/a
+    q: b/a
+
+    """
+    s_i = 1.0 #first guess of shape
+    q_i = 1.0
+    x_s, y_s, z_s = volumes(x, y, z, r, q_i, s_i)
+    s_tensor = shape_tensor(x_s, y_s, z_s)
+    rot_i, s, q = axis_ratios(s_tensor)
+    while ((abs(s-s_i)>tol) & (abs(q-q_i)>tol)):
+        s_i, q_i = s, q
+        x_s, y_s, z_s = volumes(x, y, z,r, q_i, s_i)
         s_tensor = shape_tensor(x_s, y_s, z_s)
         rot, s, q = axis_ratios(s_tensor)
     return s, q
