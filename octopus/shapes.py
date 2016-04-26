@@ -101,9 +101,14 @@ def iterate_volume(x, y, z, r, tol):
     x_s, y_s, z_s = volumes(x, y, z, r, q_i, s_i)
     s_tensor = shape_tensor(x_s, y_s, z_s)
     rot_i, s, q = axis_ratios(s_tensor)
+    counter = 0
     while ((abs(s-s_i)>tol) & (abs(q-q_i)>tol)):
         s_i, q_i = s, q
         x_s, y_s, z_s = volumes(x, y, z,r, q_i, s_i)
         s_tensor = shape_tensor(x_s, y_s, z_s)
         rot, s, q = axis_ratios(s_tensor)
+        counter +=1
+        if counter >=500:
+           s, q = [0.0, 0.0]
+           break
     return s, q
