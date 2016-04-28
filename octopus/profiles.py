@@ -75,14 +75,14 @@ def dens_hernquist(a, r, M):
     a = a * units.kpc
     r = r * units.kpc
     M = M * units.Msun
-    rho = M / (2 * np.pi) * a / (r*(r+a)**3)
+    rho = M / (2. * np.pi) * a / (r*(r+a)**3.)
     return rho.value
 
 def mass_hernquist(a, r, M):
     a = a*  units.kpc
     r = r * units.kpc
     M = M * units.Msun
-    Mass = M * r**2 / (r+a)**2
+    Mass = M * r**2. / (r+a)**2.
     return Mass.value
 
 def vc_hernquist(a, x, y, z, M):
@@ -90,7 +90,7 @@ def vc_hernquist(a, x, y, z, M):
     y = y * units.kpc
     z = z * units.kpc
     a = a*units.kpc
-    r = np.sqrt(x**2 + y**2 + z**2)
+    r = np.sqrt(x**2. + y.**2 + z.**2)
     M = M * units.Msun
     vc = np.sqrt(G*M*r/(r+a)**2)
     vc = vc.to(units.km / units.s)
