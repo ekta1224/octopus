@@ -68,7 +68,7 @@ def iterate_shell(x, y, z, r, dr, tol):
 
     """
     s_i = 1.0 #first guess of shape
-    q_i = 1.0
+    q_i = 1.0 #first guess of shape
     x_s, y_s, z_s = shells(x, y, z, dr, r, q_i, s_i)
     s_tensor = shape_tensor(x_s, y_s, z_s)
     rot_i, s, q = axis_ratios(s_tensor)
@@ -104,11 +104,11 @@ def iterate_volume(x, y, z, r, tol):
     counter = 0
     while ((abs(s-s_i)>tol) & (abs(q-q_i)>tol)):
         s_i, q_i = s, q
-        x_s, y_s, z_s = volumes(x, y, z,r, q_i, s_i)
+        x_s, y_s, z_s = volumes(x, y, z, r, q_i, s_i)
         s_tensor = shape_tensor(x_s, y_s, z_s)
         rot, s, q = axis_ratios(s_tensor)
         counter +=1
-        if counter >=500:
+        if counter >=2000:
            s, q = [0.0, 0.0]
            break
-    return s, q
+    return s.real, q.real
