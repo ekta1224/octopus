@@ -90,7 +90,7 @@ def vc_hernquist(a, x, y, z, M):
     y = y * units.kpc
     z = z * units.kpc
     a = a*units.kpc
-    r = np.sqrt(x**2. + y.**2 + z.**2)
+    r = np.sqrt(x**2. + y**2. + z**2.)
     M = M * units.Msun
     vc = np.sqrt(G*M*r/(r+a)**2)
     vc = vc.to(units.km / units.s)
