@@ -82,6 +82,6 @@ def grid3d(X, Y, Z, res):
     for i in range(res):
         for j in range(res):
             for k in range(res):
-                rho[i][j][k] = density(X, Y, Z, mass, [rx[i], ry[j], rz[k])
+                rho[i][j][k] = density(X, Y, Z, mass, [rx[i], ry[j],rz[k]])
     return rho
 
