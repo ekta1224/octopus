@@ -106,7 +106,7 @@ def CM(xyz, vxyz, delta=0.025):
         vzCM_new = np.sum(vxyz[:,2])/N
     return np.array([xCM_new, yCM_new, zCM_new]), np.array([vxCM_new, vyCM_new, vzCM_new])
 
-def orbit(path, snap_name, initial_snap, final_snap, NMW_particles):
+def orbit(path, snap_name, initial_snap, final_snap, NMW_particles, delta):
     """
     Computes the orbit of the MW and the LMC. It compute the CM of the
     MW and the LMC using the shrinking sphere method at each snapshot.
@@ -119,7 +119,7 @@ def orbit(path, snap_name, initial_snap, final_snap, NMW_particles):
     initial_snap: Number of the initial snapshot
     final_snap: Number of the final snapshot
     NMW_particles: Number of MW particles in the simulation.
-
+    delta: convergence distance
     Returns:
     --------
     XMWcm, vMWcm, xLMCcm, vLMCcm: 4 arrays containing the coordinates
@@ -139,6 +139,6 @@ def orbit(path, snap_name, initial_snap, final_snap, NMW_particles):
         vxyz = readsnap(path + snap_name +'_{:03d}.hdf5'.format(i),'vel', 'dm')
         pids = readsnap(path + snap_name +'_{:03d}.hdf5'.format(i),'pid', 'dm')
         MW_xyz, MW_vxyz, LMC_xyz, LMC_vxyz = MW_LMC_particles(xyz, vxyz, pids, NMW_particles)
-        MW_rcm[i], MW_vcm[i] = CM(MW_xyz, MW_vxyz)
-        LMC_rcm[i], LMC_vcm[i] = CM(LMC_xyz, LMC_vxyz)
+        MW_rcm[i], MW_vcm[i] = CM(MW_xyz, MW_vxyz, delta)
+        LMC_rcm[i], LMC_vcm[i] = CM(LMC_xyz, LMC_vxyz, delta)
     return MW_rcm, MW_vcm, LMC_rcm, LMC_vcm
