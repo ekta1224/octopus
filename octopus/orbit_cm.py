@@ -25,8 +25,9 @@ def MW_LMC_particles(xyz, vxyz, pids, NMW_particles):
 
     """
     sort_indexes = np.sort(pids)
-    MW_ids = np.where(sort_indexes<NMW_particles)[0]
-    LMC_ids = np.where(sort_indexes>NMW_particles)[0]
+    N_cut = sort_indexes[NMW_particles]
+    MW_ids = np.where(pids<N_cut)[0]
+    LMC_ids = np.where(pids>=N_cut)[0]
     return xyz[MW_ids], vxyz[MW_ids], xyz[LMC_ids], vxyz[LMC_ids]
 
 def CM_disk_potential(x, y, z, vx, vy, vz, Pdisk):
@@ -86,10 +87,10 @@ def CM(xyz, vxyz, delta=0.025):
         yCM = yCM_new
         zCM = zCM_new
         # Re-centering sphere
-        xyz[:,0] = xyz[:,0] - xCM_new
-        xyz[:,1] = xyz[:,1] - yCM_new
-        xyz[:,2] = xyz[:,2] - zCM_new
-        R = np.sqrt(xyz[:,0]**2 + xyz[:,1]**2 + xyz[:,2]**2)
+        xyz[:,0] = xyz[:,0]
+        xyz[:,1] = xyz[:,1]
+        xyz[:,2] = xyz[:,2]
+        R = np.sqrt((xyz[:,0]-xCM_new)**2 + (xyz[:,1]-yCM_new)**2 + (xyz[:,2]-zCM_new)**2)
         Rmax = np.max(R)
         # Reducing Sphere by its 2.5%
         index = np.where(R<Rmax*0.975)[0]
