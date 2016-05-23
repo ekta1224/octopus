@@ -3,11 +3,31 @@
 
 import numpy as np
 from pygadgetreader import *
-import sys
 
-V_radius = 2.0 # Radius of disk particles to compute the CM
 
 #Function that computed the MW CM using the disk potential
+
+def MW_LMC_particles(xyz, vxyz, pids, NMW_particles):
+    """
+    Function that return the MW and the LMC particles
+    positions and velocities.
+
+    Parameters:
+    -----------
+    xyz: snapshot coordinates with shape (n,3)
+    vxys: snapshot velocities with shape (n,3)
+    pids: particles ids
+    NMW_particles: Number of MW particles in the snapshot
+    Returns:
+    --------
+    xyz_mw, vxyz_mw, xyzlmc, vxyz_lmc: coordinates and velocities of
+    the MW and the LMC.
+
+    """
+    sort_indexes = np.sort(pids)
+    MW_ids = np.where(sort_indexes<NMW_particles)[0]
+    LMC_ids = np.where(sort_indexes>NMW_particles)[0]
+    return xyz[MW_ids], vxyz[MW_ids], xyz[LMC_ids], vxyz[LMC_ids]
 
 def CM_disk_potential(x, y, z, vx, vy, vz, Pdisk):
     min_pot = np.where(Pdisk==min(Pdisk))[0]
@@ -26,121 +46,98 @@ def CM_disk_potential(x, y, z, vx, vy, vz, Pdisk):
     vz_cm = sum(vz[avg_particles])/len(avg_particles)
     return x_cm, y_cm, z_cm, vx_cm, vy_cm, vz_cm
 
-# Function that computes the CM iterativly
-def CM(xyz, vxyz, delta=0.0333):
+def CM(xyz, vxyz, delta=0.025):
     """
-    Compute the center of mass coordinates and velocities of a halo.
-    It iterates in radii until reach a convergence given by delta.
+    Compute the center of mass coordinates and velocities of a halo
+    using the Shrinking Sphere Method Power et al 2003.
+    It iterates in radii until reach a convergence given by delta
+    or 1% of the total number of particles.
 
     Parameters:
     -----------
     xyz: cartesian coordinates with shape (n,3)
     vxys: cartesian velocities with shape (n,3)
-    delta(optional): Precision of the CM, D=0.033
+    delta(optional): Precision of the CM, D=0.025
 
     Returns:
     --------
-    xcm, ycm, zcm, vxcm, vycm, vzcm: coordinates and velocities of
+    rcm, vcm: 2 arrays containing the coordinates and velocities of
     the center of mass with reference to a (0,0,0) point.
 
     """
-    N = len(xyz)
-    xCM = sum(xyz[:,0])/N
-    yCM = sum(xyz[:,1])/N
-    zCM = sum(xyz[:,2])/N
-
-    xCM_new = xCM
-    yCM_new = yCM
-    zCM_new = zCM
+    N_i = len(xyz)
+    N = N_i
 
     xCM = 0.0
     yCM = 0.0
     zCM = 0.0
 
-    vxCM_new = sum(vxyz[:,0])/N
-    vyCM_new = sum(vxyz[:,1])/N
-    vzCM_new = sum(vxyz[:,2])/N
+    xCM_new = sum(xyz[:,0])/N_i
+    yCM_new = sum(xyz[:,1])/N_i
+    zCM_new = sum(xyz[:,2])/N_i
 
-    R1 = np.sqrt((xyz[:,0] - xCM_new)**2 + (xyz[:,1] - yCM_new)**2 + (xyz[:,2] - zCM_new)**2)
-    i=0
-    while (np.sqrt((xCM_new-xCM)**2 + (yCM_new-yCM)**2 +(zCM_new-zCM)**2) > delta):
+    vxCM_new = sum(vxyz[:,0])/N_i
+    vyCM_new = sum(vxyz[:,1])/N_i
+    vzCM_new = sum(vxyz[:,2])/N_i
+
+    while ((np.sqrt((xCM_new-xCM)**2 + (yCM_new-yCM)**2
+        +(zCM_new-zCM)**2) > delta) & (N>N_i*0.01)):
         xCM = xCM_new
         yCM = yCM_new
         zCM = zCM_new
-        Rcm = np.sqrt(xCM**2 + yCM**2 + zCM**2)
-        R = np.sqrt((xyz[:,0] - xCM)**2 + (xyz[:,1] - yCM)**2 + (xyz[:,2] - zCM)**2)
+        # Re-centering sphere
+        xyz[:,0] = xyz[:,0] - xCM_new
+        xyz[:,1] = xyz[:,1] - yCM_new
+        xyz[:,2] = xyz[:,2] - zCM_new
+        R = np.sqrt(xyz[:,0]**2 + xyz[:,1]**2 + xyz[:,2]**2)
         Rmax = np.max(R)
-        index = np.where(R<Rmax/1.3)[0]
+        # Reducing Sphere by its 2.5%
+        index = np.where(R<Rmax*0.975)[0]
         xyz = xyz[index]
         vxyz = vxyz[index]
         N = len(xyz)
-        i+=1
+        #Computing new CM coordinates and velocities
         xCM_new = np.sum(xyz[:,0])/N
         yCM_new = np.sum(xyz[:,1])/N
         zCM_new = np.sum(xyz[:,2])/N
         vxCM_new = np.sum(vxyz[:,0])/N
         vyCM_new = np.sum(vxyz[:,1])/N
         vzCM_new = np.sum(vxyz[:,2])/N
-        #Rnow[i] = max(np.sqrt((x - xCM_new[i])**2 + (y - yCM_new[i])**2 + (z - zCM_new[i])**2))
-    #clean = np.where(Rnow != 0)[0]
-    return xCM_new, yCM_new, zCM_new, vxCM_new, vyCM_new, vzCM_new
+    return np.array([xCM_new, yCM_new, zCM_new]), np.array([vxCM_new, vyCM_new, vzCM_new])
 
-# function that computes the CM using the 10% most bound particles!
-# I am using the potential method any more, its not useful to find the 
-#LMC CM because the particles feel the potential of the MW.
-"""
-def potential_CM(potential, x, y, z, vx, vy, vz):
-    index = np.where(potential< min(potential)*0.90)[0]
-    x_p = x[index]
-    y_p = y[index]
-    z_p = z[index]
-    vx_p = vx[index]
-    vy_p = vy[index]
-    vz_p = vz[index]
-    N = len(x_p)
-    x_cm = sum(x_p)/N
-    y_cm = sum(y_p)/N
-    z_cm = sum(z_p)/N
-    vx_cm = sum(vx_p)/N
-    vy_cm = sum(vy_p)/N
-    vz_cm = sum(vz_p)/N
-    Rcm = np.sqrt(x_cm**2.0 + y_cm**2.0 + z_cm**2.0)
-    Vcm = np.sqrt(vx_cm**2.0 + vy_cm**2.0 + vz_cm**2.0)
-    return x_cm, y_cm, z_cm, vx_cm, vy_cm, vz_cm, Rcm, Vcm
+def orbit(path, snap_name, initial_snap, final_snap, NMW_particles):
+    """
+    Computes the orbit of the MW and the LMC. It compute the CM of the
+    MW and the LMC using the shrinking sphere method at each snapshot.
 
+    Parameters:
+    -----------
+    path: Path to the simulation snapshots
+    snap_name: Base name of the snaphot without the number and
+    file type, e.g: LMCMW
+    initial_snap: Number of the initial snapshot
+    final_snap: Number of the final snapshot
+    NMW_particles: Number of MW particles in the simulation.
 
-#Function that computes the CM of the halo using the minimum of the
-#potential:
-def CMMW(x, y, z, pot):
-    rcut = np.where(np.sqrt(x**2+y**2+z**2)<30.0)[0]
-    x, y, z, pot = x[rcut], y[rcut], z[rcut], pot[rcut]
-    cm = np.where(pot == min(pot))[0]
-    x_cm, y_cm, z_cm = x[cm], y[cm], z[cm]
-    return x_cm, y_cm, z_cm
+    Returns:
+    --------
+    XMWcm, vMWcm, xLMCcm, vLMCcm: 4 arrays containing the coordinates
+    and velocities of the center of mass with reference to a (0,0,0) point
+    at a given time.
 
-def CMLMC(x, y, z, pot, xcmmw, ycmmw, zcmmw):
-    xcm = sum(x)/len(x)
-    ycm = sum(y)/len(y)
-    zcm = sum(z)/len(z)
-    rcut = np.where(np.sqrt((x-xcm)**2+(y-ycm)**2+(z-zcm)**2)<20.0)[0]
-    x, y, z, pot = x[rcut], y[rcut], z[rcut], pot[rcut]
-    cm = np.where(pot == min(pot))[0]
-    x_cm, y_cm, z_cm = x[cm], y[cm], z[cm]
-    return x_cm, y_cm, z_cm
+    """
 
-def VCM(x, y, z, xcm, ycm, zcm, vx, vy, vz):
-    Ntot = len(x)
-    N = Ntot
-    while(N>0.1*Ntot):
-        rshell = np.sqrt((x-xcm)**2 + (y-ycm)**2 + (z-zcm)**2)
-        rcut = max(rshell) / 1.1
-        cut = np.where(rshell<=rcut)[0]
-        x, y, z = x[cut], y[cut], z[cut]
-        vx, vy, vz = vx[cut], vy[cut], vz[cut]
-        N = len(x)
-    vxcm = sum(vx)/N
-    vycm = sum(vy)/N
-    vzcm = sum(vz)/N
-    return vxcm, vycm, vzcm
-"""
+    N_snaps = final_snap - initial_snap + 1
+    MW_rcm = np.zeros((N_snaps,3))
+    MW_vcm = np.zeros((N_snaps,3))
+    LMC_rcm = np.zeros((N_snaps,3))
+    LMC_vcm = np.zeros((N_snaps,3))
 
+    for i in range(initial_snap, final_snap+1):
+        xyz = readsnap(path + snap_name + '_{:03d}.hdf5'.format(i),'pos', 'dm')
+        vxyz = readsnap(path + snap_name +'_{:03d}.hdf5'.format(i),'vel', 'dm')
+        pids = readsnap(path + snap_name +'_{:03d}.hdf5'.format(i),'pid', 'dm')
+        MW_xyz, MW_vxyz, LMC_xyz, LMC_vxyz = MW_LMC_particles(xyz, vxyz, pids, NMW_particles)
+        MW_rcm[i], MW_vcm[i] = CM(MW_xyz, MW_vxyz)
+        LMC_rcm[i], LMC_vcm[i] = CM(LMC_xyz, LMC_vxyz)
+    return MW_rcm, MW_vcm, LMC_rcm, LMC_vcm
