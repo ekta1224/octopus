@@ -81,8 +81,7 @@ def CM(xyz, vxyz, delta=0.025):
     vyCM_new = sum(vxyz[:,1])/N_i
     vzCM_new = sum(vxyz[:,2])/N_i
 
-    while ((np.sqrt((xCM_new-xCM)**2 + (yCM_new-yCM)**2
-        +(zCM_new-zCM)**2) > delta) & (N>N_i*0.01)):
+    while ((np.sqrt((xCM_new-xCM)**2 + (yCM_new-yCM)**2 + (zCM_new-zCM)**2) > delta) & ((N>N_i*0.01) | (N>1000))):
         xCM = xCM_new
         yCM = yCM_new
         zCM = zCM_new
@@ -106,7 +105,9 @@ def CM(xyz, vxyz, delta=0.025):
         vzCM_new = np.sum(vxyz[:,2])/N
     return np.array([xCM_new, yCM_new, zCM_new]), np.array([vxCM_new, vyCM_new, vzCM_new])
 
-def orbit(path, snap_name, initial_snap, final_snap, NMW_particles, delta):
+
+
+def orbit(path, snap_name, initial_snap, final_snap, NMW_particles, delta, lmc=False):
     """
     Computes the orbit of the MW and the LMC. It compute the CM of the
     MW and the LMC using the shrinking sphere method at each snapshot.
@@ -120,6 +121,7 @@ def orbit(path, snap_name, initial_snap, final_snap, NMW_particles, delta):
     final_snap: Number of the final snapshot
     NMW_particles: Number of MW particles in the simulation.
     delta: convergence distance
+    lmc: track the lmc orbit. (default = False)
     Returns:
     --------
     XMWcm, vMWcm, xLMCcm, vLMCcm: 4 arrays containing the coordinates
@@ -138,7 +140,10 @@ def orbit(path, snap_name, initial_snap, final_snap, NMW_particles, delta):
         xyz = readsnap(path + snap_name + '_{:03d}.hdf5'.format(i),'pos', 'dm')
         vxyz = readsnap(path + snap_name +'_{:03d}.hdf5'.format(i),'vel', 'dm')
         pids = readsnap(path + snap_name +'_{:03d}.hdf5'.format(i),'pid', 'dm')
-        MW_xyz, MW_vxyz, LMC_xyz, LMC_vxyz = MW_LMC_particles(xyz, vxyz, pids, NMW_particles)
-        MW_rcm[i], MW_vcm[i] = CM(MW_xyz, MW_vxyz, delta)
-        LMC_rcm[i], LMC_vcm[i] = CM(LMC_xyz, LMC_vxyz, delta)
+        if lmc==True:
+            MW_xyz, MW_vxyz, LMC_xyz, LMC_vxyz = MW_LMC_particles(xyz, vxyz, pids, NMW_particles)
+            MW_rcm[i], MW_vcm[i] = CM(MW_xyz, MW_vxyz, delta)
+            LMC_rcm[i], LMC_vcm[i] = CM(LMC_xyz, LMC_vxyz, delta)
+       else:
+            MW_rcm[i], MW_vcm[i] = CM(xyz, vxyz, delta)
     return MW_rcm, MW_vcm, LMC_rcm, LMC_vcm
