@@ -144,6 +144,6 @@ def orbit(path, snap_name, initial_snap, final_snap, NMW_particles, delta, lmc=F
             MW_xyz, MW_vxyz, LMC_xyz, LMC_vxyz = MW_LMC_particles(xyz, vxyz, pids, NMW_particles)
             MW_rcm[i], MW_vcm[i] = CM(MW_xyz, MW_vxyz, delta)
             LMC_rcm[i], LMC_vcm[i] = CM(LMC_xyz, LMC_vxyz, delta)
-       else:
+        else:
             MW_rcm[i], MW_vcm[i] = CM(xyz, vxyz, delta)
     return MW_rcm, MW_vcm, LMC_rcm, LMC_vcm
