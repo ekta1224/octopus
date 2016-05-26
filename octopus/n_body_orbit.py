@@ -47,12 +47,11 @@ def particle_orbit(path, snap_name, R, V, t, t_i, dt):
     -----------
     path: path to snapshots folder.
     snap_name: snapshots base name.
-    R: Distance from a (0,0,0) point to the particle.
+    R: Distance to a particle from a (0,0,0) reference point.
     V: Velocity of the particle at R.
     t: time of the orbit in Gyrs.
     t_i: Initial time of the orbit.
     dt: Time interval between snapshots.
-
     Returns:
     --------
     3d array with the position of the particle at all the snapshots.
