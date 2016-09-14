@@ -21,12 +21,12 @@ def index_particle(path, snap_name, R_particle, V_particle, time):
     V = np.sqrt(vel_cut[:,0]**2.0 + vel_cut[:,1]**2.0 + vel_cut[:,2]**2.0)
     index_v = np.where(np.abs(V-V_particle) == min(np.abs(V-V_particle)))[0]
     if len(index_v)==0:
-        print 'Error: There are not particles at {} kpc with a velocity of {}km/s\n'.format(R_particle, V_particle)
-        print 'The particles at this distance have the following range of velocities:', min(vel_cut), max(vel_cut)
+        print('Error: There are not particles at {} kpc with a velocity of {}km/s\n'.format(R_particle, V_particle))
+        print('The particles at this distance have the following range of velocities:', min(vel_cut), max(vel_cut))
         return
     else:
-        print 'Initial position (kpc):', pos_cut[index_v]
-        print 'Initial velocity (km/s):', vel_cut[index_v]
+        print('Initial position (kpc):', pos_cut[index_v])
+        print('Initial velocity (km/s):', vel_cut[index_v])
         return index_ir[index_v]
 
 def N_body_orbit(path, snap_name, snap_n, pid):
