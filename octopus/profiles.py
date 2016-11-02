@@ -1,7 +1,7 @@
 # The output units are as folows:
 # M = [Msun]
 # rho = [Msun / kpc3]
-# potential = 
+# potential = [kpc/s2]
 # Circular velocity = [km/s]
 # acceleration = [kpc/Gyr2]
 #########################################################
@@ -10,7 +10,7 @@
 import numpy as np
 from astropy import constants
 from astropy import units
-from cosmotools import *
+from  octopus.cosmotools import *
 
 
 K = constants.k_B

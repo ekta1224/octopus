@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/sr/bin/env python
 # -*- coding: utf-8 -*-
 
 import numpy as np
@@ -102,7 +102,7 @@ def CM(xyz, vxyz, delta=0.025):
         zCM_new = np.sum(xyz[:,2])/N
         vxCM_new = np.sum(vxyz[:,0])/N
         vyCM_new = np.sum(vxyz[:,1])/N
-        vzCM_new = np.sum(vxyz[:,2])/N
+     vzCM_new = np.sum(vxyz[:,2])/N
     return np.array([xCM_new, yCM_new, zCM_new]), np.array([vxCM_new, vyCM_new, vzCM_new])
 
 
@@ -147,3 +147,7 @@ def orbit(path, snap_name, initial_snap, final_snap, NMW_particles, delta, lmc=F
         else:
             MW_rcm[i], MW_vcm[i] = CM(xyz, vxyz, delta)
     return MW_rcm, MW_vcm, LMC_rcm, LMC_vcm
+
+
+#ef cm_innerp():
+    
