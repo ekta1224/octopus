@@ -1,8 +1,27 @@
+"""
+Code to select a particle orbit from a N-body simulation.
+
+
+
+"""
+
 import numpy as np
 from pygadgetreader import readsnap
 
 def index_particle(path, snap_name, R_particle, V_particle, time):
+    """
+    Finds the index of a particle in a given snapshot given it's
+    velocity magnitude and position magnitude.
 
+    Input:
+    ------
+
+    path: path to snapshot
+    snap_name: snapshot base name.
+    R_particle: Galactocentric distance of the particle
+    V_particle: Galactocentric velocity of the particle
+    time: Number of the snapshot.
+    """
     # reading snapshot
     pos = readsnap(path + snap_name + '_{:03d}.hdf5'.format(time),'pos', 'dm')
     vel = readsnap(path + snap_name + '_{:03d}.hdf5'.format(time),'vel', 'dm')
@@ -30,6 +49,9 @@ def index_particle(path, snap_name, R_particle, V_particle, time):
         return index_ir[index_v]
 
 def N_body_orbit(path, snap_name, snap_n, pid):
+    """
+    Returns the positions and velocity of a particle given it's index
+    """
     pos = readsnap(path + snap_name + '_{:03d}.hdf5'.format(snap_n),'pos', 'dm')
     vel = readsnap(path + snap_name + '_{:03d}.hdf5'.format(snap_n),'vel', 'dm')
     LMCMW_pid = readsnap(path + snap_name +'_{:03d}.hdf5'.format(snap_n), 'pid', 'dm')
@@ -38,7 +60,7 @@ def N_body_orbit(path, snap_name, snap_n, pid):
 
 def particle_orbit(path, snap_name, R, V, t, t_i, dt):
     """
-    The function finds a particle at a given position and
+    Finds a particle at a given position and
     velocity in a snapshot of a N-body simulation and returns
     its orbit in a given time reading all the snapshots.
 
@@ -56,6 +78,7 @@ def particle_orbit(path, snap_name, R, V, t, t_i, dt):
     An array with the positions and velocities of the particle at all
     the snapshots. (2, N_snaps, 3)
     """
+
     N_i = int(t_i/dt)
     N_snaps = int(t/dt)
     particle_pos = np.zeros((N_snaps,3))
