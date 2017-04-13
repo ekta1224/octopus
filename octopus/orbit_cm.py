@@ -142,8 +142,8 @@ def orbit(path, snap_name, initial_snap, final_snap, NMW_particles, delta, lmc=F
         pids = readsnap(path + snap_name +'_{:03d}.hdf5'.format(i),'pid', 'dm')
         if lmc==True:
             MW_xyz, MW_vxyz, LMC_xyz, LMC_vxyz = MW_LMC_particles(xyz, vxyz, pids, NMW_particles)
-            MW_rcm[i-inital_snap], MW_vcm[i-inital_snap] = CM(MW_xyz, MW_vxyz, delta)
-            LMC_rcm[i-inital_snap], LMC_vcm[i-inital_snap] = CM(LMC_xyz, LMC_vxyz, delta)
+            MW_rcm[i-initial_snap], MW_vcm[i-initial_snap] = CM(MW_xyz, MW_vxyz, delta)
+            LMC_rcm[i-initial_snap], LMC_vcm[i-initial_snap] = CM(LMC_xyz, LMC_vxyz, delta)
         else:
             MW_rcm[i-inital_snap], MW_vcm[i-inital_snap] = CM(xyz, vxyz, delta)
     return MW_rcm, MW_vcm, LMC_rcm, LMC_vcm
