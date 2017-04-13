@@ -102,7 +102,7 @@ def CM(xyz, vxyz, delta=0.025):
         zCM_new = np.sum(xyz[:,2])/N
         vxCM_new = np.sum(vxyz[:,0])/N
         vyCM_new = np.sum(vxyz[:,1])/N
-     vzCM_new = np.sum(vxyz[:,2])/N
+        vzCM_new = np.sum(vxyz[:,2])/N
     return np.array([xCM_new, yCM_new, zCM_new]), np.array([vxCM_new, vyCM_new, vzCM_new])
 
 
@@ -142,12 +142,10 @@ def orbit(path, snap_name, initial_snap, final_snap, NMW_particles, delta, lmc=F
         pids = readsnap(path + snap_name +'_{:03d}.hdf5'.format(i),'pid', 'dm')
         if lmc==True:
             MW_xyz, MW_vxyz, LMC_xyz, LMC_vxyz = MW_LMC_particles(xyz, vxyz, pids, NMW_particles)
-            MW_rcm[i], MW_vcm[i] = CM(MW_xyz, MW_vxyz, delta)
-            LMC_rcm[i], LMC_vcm[i] = CM(LMC_xyz, LMC_vxyz, delta)
+            MW_rcm[i-inital_snap], MW_vcm[i-inital_snap] = CM(MW_xyz, MW_vxyz, delta)
+            LMC_rcm[i-inital_snap], LMC_vcm[i-inital_snap] = CM(LMC_xyz, LMC_vxyz, delta)
         else:
-            MW_rcm[i], MW_vcm[i] = CM(xyz, vxyz, delta)
+            MW_rcm[i-inital_snap], MW_vcm[i-inital_snap] = CM(xyz, vxyz, delta)
     return MW_rcm, MW_vcm, LMC_rcm, LMC_vcm
 
 
-#ef cm_innerp():
-    

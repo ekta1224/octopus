@@ -42,7 +42,7 @@ def index_particle(path, snap_name, R_particle, V_particle, time):
     if len(index_v)==0:
         print('Error: There are not particles at {} kpc with a velocity of {}km/s\n'.format(R_particle, V_particle))
         print('The particles at this distance have the following range of velocities:', min(vel_cut), max(vel_cut))
-        return
+        return 0
     else:
         print('Initial position (kpc):', pos_cut[index_v])
         print('Initial velocity (km/s):', vel_cut[index_v])

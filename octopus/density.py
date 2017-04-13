@@ -48,7 +48,7 @@ def density(x,y,z, mass, r):
 def grid(X, Y, Z, res):
     """
     Make a grid with all the densities.
-    :param X, Y, Z:
+    param X, Y, Z:
          Coordinates of the dots.
     :param res:
          Resolution of the square grid.
