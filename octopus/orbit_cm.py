@@ -30,7 +30,15 @@ def MW_LMC_particles(xyz, vxyz, pids, NMW_particles):
     LMC_ids = np.where(pids>=N_cut)[0]
     return xyz[MW_ids], vxyz[MW_ids], xyz[LMC_ids], vxyz[LMC_ids]
 
-def CM_disk_potential(x, y, z, vx, vy, vz, Pdisk):
+def CM_disk_potential(xyz, vxyz, Pdisk): 
+    V_radius = 2
+    vx = vxyz[:,0]
+    vy = vxyz[:,1]
+    vz = vxyz[:,2]
+    x = xyz[:,0]
+    y = xyz[:,1]
+    z = xyz[:,2]
+
     min_pot = np.where(Pdisk==min(Pdisk))[0]
     x_min = x[min_pot]
     y_min = y[min_pot]
@@ -45,7 +53,7 @@ def CM_disk_potential(x, y, z, vx, vy, vz, Pdisk):
     vx_cm = sum(vx[avg_particles])/len(avg_particles)
     vy_cm = sum(vy[avg_particles])/len(avg_particles)
     vz_cm = sum(vz[avg_particles])/len(avg_particles)
-    return x_cm, y_cm, z_cm, vx_cm, vy_cm, vz_cm
+    return np.array([x_cm, y_cm, z_cm]), np.array([vx_cm, vy_cm, vz_cm])
 
 def CM(xyz, vxyz, delta=0.025):
     """
@@ -81,7 +89,7 @@ def CM(xyz, vxyz, delta=0.025):
     vyCM_new = sum(vxyz[:,1])/N_i
     vzCM_new = sum(vxyz[:,2])/N_i
 
-    while ((np.sqrt((xCM_new-xCM)**2 + (yCM_new-yCM)**2 + (zCM_new-zCM)**2) > delta) & ((N>N_i*0.01) | (N>1000))):
+    while (((np.sqrt((xCM_new-xCM)**2 + (yCM_new-yCM)**2 + (zCM_new-zCM)**2) > delta) & (N>N_i*0.01)) | (N>1000)):
         xCM = xCM_new
         yCM = yCM_new
         zCM = zCM_new
@@ -107,7 +115,7 @@ def CM(xyz, vxyz, delta=0.025):
 
 
 
-def orbit(path, snap_name, initial_snap, final_snap, NMW_particles, delta, lmc=False):
+def orbit(path, snap_name, initial_snap, final_snap, NMW_particles, delta, lmc=False, disk=False):
     """
     Computes the orbit of the MW and the LMC. It compute the CM of the
     MW and the LMC using the shrinking sphere method at each snapshot.
@@ -140,12 +148,23 @@ def orbit(path, snap_name, initial_snap, final_snap, NMW_particles, delta, lmc=F
         xyz = readsnap(path + snap_name + '_{:03d}.hdf5'.format(i),'pos', 'dm')
         vxyz = readsnap(path + snap_name +'_{:03d}.hdf5'.format(i),'vel', 'dm')
         pids = readsnap(path + snap_name +'_{:03d}.hdf5'.format(i),'pid', 'dm')
+
+        MW_xyz_disk = readsnap(path + snap_name + '_{:03d}.hdf5'.format(i),'pos', 'disk')
+        MW_vxyz_disk = readsnap(path + snap_name + '_{:03d}.hdf5'.format(i),'vel', 'disk')
+        MW_pot_disk = readsnap(path + snap_name + '_{:03d}.hdf5'.format(i),'pot', 'disk')
         if lmc==True:
             MW_xyz, MW_vxyz, LMC_xyz, LMC_vxyz = MW_LMC_particles(xyz, vxyz, pids, NMW_particles)
-            MW_rcm[i-initial_snap], MW_vcm[i-initial_snap] = CM(MW_xyz, MW_vxyz, delta)
+            if disk==True:
+                MW_rcm[i-initial_snap], MW_vcm[i-initial_snap] = CM_disk_potential(MW_xyz_disk, MW_vxyz_disk, MW_pot_disk)
+            else:
+                MW_rcm[i-initial_snap], MW_vcm[i-initial_snap] = CM(MW_xyz, MW_vxyz, delta)
             LMC_rcm[i-initial_snap], LMC_vcm[i-initial_snap] = CM(LMC_xyz, LMC_vxyz, delta)
         else:
-            MW_rcm[i-initial_snap], MW_vcm[i-initial_snap] = CM(xyz, vxyz, delta)
+            if disk==True:
+                MW_rcm[i-initial_snap], MW_vcm[i-initial_snap] = CM_disk_potential(MW_xyz_disk, MW_vxyz_disk, MW_pot_disk)
+            else:
+                MW_rcm[i-initial_snap], MW_vcm[i-initial_snap] = CM(MW_xyz, MW_vxyz, delta)
+
     return MW_rcm, MW_vcm, LMC_rcm, LMC_vcm
 
 
