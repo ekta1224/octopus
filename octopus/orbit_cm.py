@@ -45,8 +45,7 @@ def CM_disk_potential(xyz, vxyz, Pdisk):
     z_min = z[min_pot]
     # This >2.0 corresponds to the radius in kpc of the particles that
     # I am taking into account to compute the CM
-    avg_particles = np.where(np.sqrt((x-x_min)**2.0 + (y-y_min)**2.0 +
-(z-z_min)**2.0)<V_radius)[0]
+    avg_particles = np.where(np.sqrt((x-x_min)**2.0 + (y-y_min)**2.0 + (z-z_min)**2.0)<V_radius)[0]
     x_cm = sum(x[avg_particles])/len(avg_particles)
     y_cm = sum(y[avg_particles])/len(avg_particles)
     z_cm = sum(z[avg_particles])/len(avg_particles)
@@ -149,21 +148,22 @@ def orbit(path, snap_name, initial_snap, final_snap, NMW_particles, delta, lmc=F
         vxyz = readsnap(path + snap_name +'_{:03d}.hdf5'.format(i),'vel', 'dm')
         pids = readsnap(path + snap_name +'_{:03d}.hdf5'.format(i),'pid', 'dm')
 
-        MW_xyz_disk = readsnap(path + snap_name + '_{:03d}.hdf5'.format(i),'pos', 'disk')
-        MW_vxyz_disk = readsnap(path + snap_name + '_{:03d}.hdf5'.format(i),'vel', 'disk')
-        MW_pot_disk = readsnap(path + snap_name + '_{:03d}.hdf5'.format(i),'pot', 'disk')
+        if disk==True:
+            MW_xyz_disk = readsnap(path + snap_name + '_{:03d}.hdf5'.format(i),'pos', 'disk')
+            MW_vxyz_disk = readsnap(path + snap_name + '_{:03d}.hdf5'.format(i),'vel', 'disk')
+            MW_pot_disk = readsnap(path + snap_name + '_{:03d}.hdf5'.format(i),'pot', 'disk')
         if lmc==True:
             MW_xyz, MW_vxyz, LMC_xyz, LMC_vxyz = MW_LMC_particles(xyz, vxyz, pids, NMW_particles)
             if disk==True:
                 MW_rcm[i-initial_snap], MW_vcm[i-initial_snap] = CM_disk_potential(MW_xyz_disk, MW_vxyz_disk, MW_pot_disk)
             else:
                 MW_rcm[i-initial_snap], MW_vcm[i-initial_snap] = CM(MW_xyz, MW_vxyz, delta)
-            LMC_rcm[i-initial_snap], LMC_vcm[i-initial_snap] = CM(LMC_xyz, LMC_vxyz, delta)
+                LMC_rcm[i-initial_snap], LMC_vcm[i-initial_snap] = CM(LMC_xyz, LMC_vxyz, delta)
         else:
             if disk==True:
                 MW_rcm[i-initial_snap], MW_vcm[i-initial_snap] = CM_disk_potential(MW_xyz_disk, MW_vxyz_disk, MW_pot_disk)
             else:
-                MW_rcm[i-initial_snap], MW_vcm[i-initial_snap] = CM(MW_xyz, MW_vxyz, delta)
+                MW_rcm[i-initial_snap], MW_vcm[i-initial_snap] = CM(xyz, vxyz, delta)
 
     return MW_rcm, MW_vcm, LMC_rcm, LMC_vcm
 
