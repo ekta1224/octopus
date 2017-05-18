@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import sys
 from pygadgetreader import *
 
 
@@ -168,3 +169,50 @@ def orbit(path, snap_name, initial_snap, final_snap, NMW_particles, delta, lmc=F
     return MW_rcm, MW_vcm, LMC_rcm, LMC_vcm
 
 
+def write_orbit(filename, MWpos, MWvel, LMCpos, LMCvel):
+    f = open(filename, 'w')
+
+    f.write('# MW x(kpc), MW y(kpc), MW z(kpc), MW vx(km/s), MW vy(km/s), MW vz(km/s) LMC x(kpc), LMC y(kpc), LMC z(kpc), LMC vx(km/s), LMC vy(km/s), LMC vz(km/s) \n')
+
+    for i in range(len(MWpos[:,0])):
+        f.write(("{:.6f} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f}"\
+                 +"{:.6f} {:.6f} {:.6f} {:.6f} {:.6f} \n").format(MWpos[i,0],\
+                 MWpos[i,1], MWpos[i,2], MWvel[i,0], MWvel[i,1], \
+                 MWvel[i,2], MWvel[i,2], LMCpos[i,0], LMCpos[i,1], \
+                 LMCpos[i,2], LMCvel[i,0], LMCvel[i,1], LMCvel[i,2]))
+
+    f.close()
+
+if __name__ == "__main__":
+
+   if (len(sys.argv)<10):
+       print('usage: path snap_name initial_snap final_snap NMW_particlesm delta lmc disk')
+       exit(0)   
+
+   path = sys.argv[1]
+   snap_name = sys.argv[2]
+   initial_snap = int(sys.argv[3])
+   final_snap = int(sys.argv[4])
+   NMW_particles = int(sys.argv[5])
+   delta = float(sys.argv[6])
+   lmc = int(sys.argv[7])
+   disk = int(sys.argv[8])
+   out_name = sys.argv[9]
+
+   if ((lmc==1) & (disk==1)):
+       MW_rcm, MW_vcm, LMC_rcm, LMC_vcm = orbit(path, snap_name, initial_snap, final_snap,
+                                                 NMW_particles, delta, lmc=True, disk=True)
+
+   if ((lmc==1) & (disk==0)):
+       MW_rcm, MW_vcm, LMC_rcm, LMC_vcm = orbit(path, snap_name, initial_snap, final_snap,
+                                                 NMW_particles, delta, lmc=True, disk=False)
+
+   if ((lmc==0)& (disk==1)):
+       MW_rcm, MW_vcm, LMC_rcm, LMC_vcm = orbit(path, snap_name, initial_snap, final_snap,
+                                                 NMW_particles, delta, lmc=False, disk=True)
+
+   if ((lmc==0)& (disk==0)):
+       MW_rcm, MW_vcm, LMC_rcm, LMC_vcm = orbit(path, snap_name, initial_snap, final_snap,
+                                                 NMW_particles, delta, lmc=False, disk=False)
+
+   write_orbit(out_name, MW_rcm, MW_vcm, LMC_rcm, LMC_vcm)
