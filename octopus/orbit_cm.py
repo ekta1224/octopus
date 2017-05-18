@@ -159,7 +159,7 @@ def orbit(path, snap_name, initial_snap, final_snap, NMW_particles, delta, lmc=F
                 MW_rcm[i-initial_snap], MW_vcm[i-initial_snap] = CM_disk_potential(MW_xyz_disk, MW_vxyz_disk, MW_pot_disk)
             else:
                 MW_rcm[i-initial_snap], MW_vcm[i-initial_snap] = CM(MW_xyz, MW_vxyz, delta)
-                LMC_rcm[i-initial_snap], LMC_vcm[i-initial_snap] = CM(LMC_xyz, LMC_vxyz, delta)
+            LMC_rcm[i-initial_snap], LMC_vcm[i-initial_snap] = CM(LMC_xyz, LMC_vxyz, delta)
         else:
             if disk==True:
                 MW_rcm[i-initial_snap], MW_vcm[i-initial_snap] = CM_disk_potential(MW_xyz_disk, MW_vxyz_disk, MW_pot_disk)
@@ -175,10 +175,9 @@ def write_orbit(filename, MWpos, MWvel, LMCpos, LMCvel):
     f.write('# MW x(kpc), MW y(kpc), MW z(kpc), MW vx(km/s), MW vy(km/s), MW vz(km/s) LMC x(kpc), LMC y(kpc), LMC z(kpc), LMC vx(km/s), LMC vy(km/s), LMC vz(km/s) \n')
 
     for i in range(len(MWpos[:,0])):
-        f.write(("{:.6f} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f}"\
-                 +"{:.6f} {:.6f} {:.6f} {:.6f} {:.6f} \n").format(MWpos[i,0],\
+        f.write(("{:.6f} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f} \n").format(MWpos[i,0],\
                  MWpos[i,1], MWpos[i,2], MWvel[i,0], MWvel[i,1], \
-                 MWvel[i,2], MWvel[i,2], LMCpos[i,0], LMCpos[i,1], \
+                 MWvel[i,2], LMCpos[i,0], LMCpos[i,1], \
                  LMCpos[i,2], LMCvel[i,0], LMCvel[i,1], LMCvel[i,2]))
 
     f.close()
@@ -187,7 +186,7 @@ if __name__ == "__main__":
 
    if (len(sys.argv)<10):
        print('usage: path snap_name initial_snap final_snap NMW_particlesm delta lmc disk')
-       exit(0)   
+       exit(0)
 
    path = sys.argv[1]
    snap_name = sys.argv[2]
