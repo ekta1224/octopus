@@ -29,7 +29,7 @@ def MW_LMC_particles(xyz, vxyz, pids, NMW_particles):
     N_cut = sort_indexes[NMW_particles]
     MW_ids = np.where(pids<N_cut)[0]
     LMC_ids = np.where(pids>=N_cut)[0]
-    return xyz[MW_ids], vxyz[MW_ids], xyz[LMC_ids], vxyz[LMC_ids]
+    return xyz[MW_ids], vxyz[MW_ids], xyz[LMC_ids], vxyz[LMC_ids], pids[MW_ids]
 
 def CM_disk_potential(xyz, vxyz, Pdisk): 
     V_radius = 2
