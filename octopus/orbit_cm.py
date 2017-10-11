@@ -29,7 +29,7 @@ def MW_LMC_particles(xyz, vxyz, pids, NMW_particles):
     N_cut = sort_indexes[NMW_particles]
     MW_ids = np.where(pids<N_cut)[0]
     LMC_ids = np.where(pids>=N_cut)[0]
-    return xyz[MW_ids], vxyz[MW_ids], xyz[LMC_ids], vxyz[LMC_ids], pids[MW_ids]
+    return xyz[MW_ids], vxyz[MW_ids], xyz[LMC_ids], vxyz[LMC_ids]
 
 def CM_disk_potential(xyz, vxyz, Pdisk): 
     V_radius = 2
@@ -111,9 +111,71 @@ def CM(xyz, vxyz, delta=0.025):
         vxCM_new = np.sum(vxyz[:,0])/N
         vyCM_new = np.sum(vxyz[:,1])/N
         vzCM_new = np.sum(vxyz[:,2])/N
+    print(Rmax)
     return np.array([xCM_new, yCM_new, zCM_new]), np.array([vxCM_new, vyCM_new, vzCM_new])
 
 
+def ss_velocities(cm_pos, pos, vel, delta):
+    N_i = len(vel)
+    N = N_i
+
+    vxCM = 0
+    vyCM = 0
+    vzCM = 0
+    vxCM_new = np.zeros(1000)
+    vyCM_new = np.zeros(1000)
+    vzCM_new = np.zeros(1000)
+    vxCM_new[1] = sum(vel[:,0])/N_i
+    vyCM_new[1] = sum(vel[:,1])/N_i
+    vzCM_new[1] = sum(vel[:,2])/N_i
+    i = 1
+    Rmax = []
+    Rmax.append(100)
+    R = np.sqrt((pos[:,0]-cm_pos[0])**2 + (pos[:,1]-cm_pos[1])**2 + (pos[:,2]-cm_pos[2])**2)
+
+    while ((np.sqrt((vxCM_new[i]-vxCM_new[i-1])**2 + (vyCM_new[i]-vyCM_new[i-1])**2 + (vzCM_new[i]-vzCM_new[i-1])**2) > delta) | (N>1000)):
+        # Reducing Sphere by its 2.5%
+        index = np.where(R<Rmax[i-1]*0.9)[0]
+        R = R[index]
+        Rmax.append(np.max(R))
+        #print(len(index))
+        vel = vel[index]
+        #print(len(vel))
+        N = len(vel)
+        print(np.max(R), N)
+        i+=1
+
+        #Computing new CM coordinates and velocities
+        vxCM_new[i] = np.sum(vel[:,0])/N
+        vyCM_new[i] = np.sum(vel[:,1])/N
+        vzCM_new[i] = np.sum(vel[:,2])/N
+
+        #print(i)
+        #print(Rmax[i])
+
+    return  vxCM_new[np.nonzero(vxCM_new)], vyCM_new[np.nonzero(vyCM_new)], vzCM_new[np.nonzero(vzCM_new)], Rmax
+
+
+def plot_velocities(vxcm, vycm, vzcm, R, i):
+    plt.figure(figsize=(14,6))
+    plt.subplot(1, 3, 1)
+    plt.plot(R, vxcm, label='$vx_{cm}$')
+    plt.legend()
+    plt.ylabel('$v$[Km/s]')
+    plt.xlabel('$R_{max}$[Kpc]')
+
+    plt.subplot(1, 3, 2)
+    plt.plot(R, vycm, label='$vy_{cm}$')
+    plt.legend()
+    plt.xlabel('$R_{max}$[Kpc]')
+
+    plt.subplot(1, 3, 3)
+    plt.plot(R, vzcm, label='$vz_{cm}$')
+    plt.xlabel('$R_{max}$[Kpc]')
+    plt.legend()
+
+    plt.xlabel('$R_{max}$[Kpc]')
+    plt.savefig('velocities_COM_snap_{:.0f}.png'.format(i), bbox_inches='tight', dpi=300)
 
 def orbit(path, snap_name, initial_snap, final_snap, NMW_particles, delta, lmc=False, disk=False):
     """
@@ -145,14 +207,17 @@ def orbit(path, snap_name, initial_snap, final_snap, NMW_particles, delta, lmc=F
     LMC_vcm = np.zeros((N_snaps,3))
 
     for i in range(initial_snap, final_snap+1):
+        # Loading the data!
         xyz = readsnap(path + snap_name + '_{:03d}.hdf5'.format(i),'pos', 'dm')
         vxyz = readsnap(path + snap_name +'_{:03d}.hdf5'.format(i),'vel', 'dm')
         pids = readsnap(path + snap_name +'_{:03d}.hdf5'.format(i),'pid', 'dm')
 
-        if disk==True:
+        if (disk==True):
             MW_xyz_disk = readsnap(path + snap_name + '_{:03d}.hdf5'.format(i),'pos', 'disk')
             MW_vxyz_disk = readsnap(path + snap_name + '_{:03d}.hdf5'.format(i),'vel', 'disk')
             MW_pot_disk = readsnap(path + snap_name + '_{:03d}.hdf5'.format(i),'pot', 'disk')
+
+        ## computing COM
         if lmc==True:
             MW_xyz, MW_vxyz, LMC_xyz, LMC_vxyz = MW_LMC_particles(xyz, vxyz, pids, NMW_particles)
             if disk==True:
@@ -160,6 +225,9 @@ def orbit(path, snap_name, initial_snap, final_snap, NMW_particles, delta, lmc=F
             else:
                 MW_rcm[i-initial_snap], MW_vcm[i-initial_snap] = CM(MW_xyz, MW_vxyz, delta)
             LMC_rcm[i-initial_snap], LMC_vcm[i-initial_snap] = CM(LMC_xyz, LMC_vxyz, delta)
+            LMC_vx, LMC_vy, LMC_vz, R_shell = ss_velocities(LMC_rcm[i-initial_snap], LMC_xyz, LMC_vxyz, 0.5)
+            plot_velocities(LMC_vx, LMC_vy, LMC_vz, R_shell, i-initial_snap)
+
         else:
             if disk==True:
                 MW_rcm[i-initial_snap], MW_vcm[i-initial_snap] = CM_disk_potential(MW_xyz_disk, MW_vxyz_disk, MW_pot_disk)
