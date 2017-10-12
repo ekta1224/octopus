@@ -4,7 +4,11 @@
 import numpy as np
 import sys
 from pygadgetreader import *
+import matplotlib
+matplotlib.use('Agg')
+#mport matplotlib.pyplot as plt 
 
+import matplotlib.pyplot as plt
 
 #Function that computed the MW CM using the disk potential
 
@@ -55,6 +59,24 @@ def CM_disk_potential(xyz, vxyz, Pdisk):
     vz_cm = sum(vz[avg_particles])/len(avg_particles)
     return np.array([x_cm, y_cm, z_cm]), np.array([vx_cm, vy_cm, vz_cm])
 
+def velocities_r15(cm_pos, pos, vel):
+    """
+    Function to compute the COM velocity in a sphere of 15 kpc
+    """
+    # Compute the distance with respect to the COM
+    R_cm = ((pos[:,0]-cm_pos[0])**2 + (pos[:,1]-cm_pos[1])**2 + (pos[:,2]-cm_pos[2])**2)**0.5
+    # Select the particles inside 15 kpc
+    index = np.where(R_cm < 15)[0]
+    # Compute the velocities of the COM:
+    velx_cm = sum(vel[index,0])/len(vel[index,0])
+    vely_cm = sum(vel[index,1])/len(vel[index,1])
+    velz_cm = sum(vel[index,2])/len(vel[index,2])
+
+    return velx_cm, vely_cm, velz_cm
+
+
+
+
 def CM(xyz, vxyz, delta=0.025):
     """
     Compute the center of mass coordinates and velocities of a halo
@@ -85,9 +107,6 @@ def CM(xyz, vxyz, delta=0.025):
     yCM_new = sum(xyz[:,1])/N_i
     zCM_new = sum(xyz[:,2])/N_i
 
-    vxCM_new = sum(vxyz[:,0])/N_i
-    vyCM_new = sum(vxyz[:,1])/N_i
-    vzCM_new = sum(vxyz[:,2])/N_i
 
     while (((np.sqrt((xCM_new-xCM)**2 + (yCM_new-yCM)**2 + (zCM_new-zCM)**2) > delta) & (N>N_i*0.01)) | (N>1000)):
         xCM = xCM_new
@@ -102,16 +121,13 @@ def CM(xyz, vxyz, delta=0.025):
         # Reducing Sphere by its 2.5%
         index = np.where(R<Rmax*0.975)[0]
         xyz = xyz[index]
-        vxyz = vxyz[index]
         N = len(xyz)
         #Computing new CM coordinates and velocities
         xCM_new = np.sum(xyz[:,0])/N
         yCM_new = np.sum(xyz[:,1])/N
         zCM_new = np.sum(xyz[:,2])/N
-        vxCM_new = np.sum(vxyz[:,0])/N
-        vyCM_new = np.sum(vxyz[:,1])/N
-        vzCM_new = np.sum(vxyz[:,2])/N
-    print(Rmax)
+
+    vxCM_new, vyCM_new, vzCM_new = velocities_r15([xCM_new, yCM_new, zCM_new], xyz, vxyz)
     return np.array([xCM_new, yCM_new, zCM_new]), np.array([vxCM_new, vyCM_new, vzCM_new])
 
 
@@ -133,7 +149,8 @@ def ss_velocities(cm_pos, pos, vel, delta):
     Rmax.append(100)
     R = np.sqrt((pos[:,0]-cm_pos[0])**2 + (pos[:,1]-cm_pos[1])**2 + (pos[:,2]-cm_pos[2])**2)
 
-    while ((np.sqrt((vxCM_new[i]-vxCM_new[i-1])**2 + (vyCM_new[i]-vyCM_new[i-1])**2 + (vzCM_new[i]-vzCM_new[i-1])**2) > delta) | (N>1000)):
+    #while ((np.sqrt((vxCM_new[i]-vxCM_new[i-1])**2 + (vyCM_new[i]-vyCM_new[i-1])**2 + (vzCM_new[i]-vzCM_new[i-1])**2) > delta) | (N>1000)):
+    while (N>1000):
         # Reducing Sphere by its 2.5%
         index = np.where(R<Rmax[i-1]*0.9)[0]
         R = R[index]
@@ -142,7 +159,7 @@ def ss_velocities(cm_pos, pos, vel, delta):
         vel = vel[index]
         #print(len(vel))
         N = len(vel)
-        print(np.max(R), N)
+        #print(np.max(R), N)
         i+=1
 
         #Computing new CM coordinates and velocities
@@ -175,7 +192,7 @@ def plot_velocities(vxcm, vycm, vzcm, R, i):
     plt.legend()
 
     plt.xlabel('$R_{max}$[Kpc]')
-    plt.savefig('velocities_COM_snap_{:.0f}.png'.format(i), bbox_inches='tight', dpi=300)
+    plt.savefig('velocities_LMC3_COM_snap_{:.0f}.png'.format(i), bbox_inches='tight', dpi=300)
 
 def orbit(path, snap_name, initial_snap, final_snap, NMW_particles, delta, lmc=False, disk=False):
     """
@@ -226,7 +243,7 @@ def orbit(path, snap_name, initial_snap, final_snap, NMW_particles, delta, lmc=F
                 MW_rcm[i-initial_snap], MW_vcm[i-initial_snap] = CM(MW_xyz, MW_vxyz, delta)
             LMC_rcm[i-initial_snap], LMC_vcm[i-initial_snap] = CM(LMC_xyz, LMC_vxyz, delta)
             LMC_vx, LMC_vy, LMC_vz, R_shell = ss_velocities(LMC_rcm[i-initial_snap], LMC_xyz, LMC_vxyz, 0.5)
-            plot_velocities(LMC_vx, LMC_vy, LMC_vz, R_shell, i-initial_snap)
+            #plot_velocities(LMC_vx, LMC_vy, LMC_vz, R_shell, i-initial_snap)
 
         else:
             if disk==True:
